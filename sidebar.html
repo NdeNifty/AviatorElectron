@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sidebar</title>
+    <link rel="stylesheet" href="./css/sidebar.css">
+    <script type="module">
+        import mappings from './mappings.js';
+        import bookieUrls from './bookieUrls.js'; // Import bookie URLs
+
+        window.onload = function () {
+            const countrySelect = document.getElementById("country-selector");
+            const bookieSelect = document.getElementById("bookie-selector");
+
+            // Populate country dropdown
+            for (const country in mappings) {
+                let option = document.createElement("option");
+                option.value = country;
+                option.textContent = country;
+                countrySelect.appendChild(option);
+            }
+
+            // Update bookie dropdown based on country selection
+            countrySelect.addEventListener("change", () => {
+                const selectedCountry = countrySelect.value;
+                bookieSelect.innerHTML = '<option value="">Select a Bookie</option>'; // Reset options
+
+                if (selectedCountry in mappings) {
+                    mappings[selectedCountry].forEach(bookie => {
+                        let option = document.createElement("option");
+                        option.value = bookie;
+                        option.textContent = bookie;
+                        bookieSelect.appendChild(option);
+                    });
+                }
+            });
+
+            // Load button logic
+            document.getElementById('scrape-button').addEventListener('click', () => {
+                const country = countrySelect.value;
+                const bookie = bookieSelect.value;
+                
+                if (!country || !bookie) {
+                    alert("Please select a country and a bookie.");
+                    return;
+                }
+
+                // Get the corresponding URL from bookieUrls.js
+                const url = bookieUrls[bookie];
+                
+                // Send the URL to the main process
+                if (url) {
+                    
+                    console.log("URL sent to main process:" + url);
+                    window.electron.updateURL(url); //send url to main process and mainprocess will send to browser view
+                    alert("URL sent to main process: " + url);
+                } else {
+                    alert("No URL found for the selected bookie.");
+                }
+            });
+        };
+    </script>
+</head>
+<body>
+    <script>
+        console.log("Renderer process started");
+    </script>
+    <div class="sidebar">
+        <h2>Menu</h2>
+
+        <label for="country-selector">Select Country:</label>
+        <select id="country-selector">
+            <option value="">Select a Country</option>
+        </select>
+
+        <label for="bookie-selector">Select Bookie:</label>
+        <select id="bookie-selector">
+            <option value="">Select a Bookie</option>
+        </select>
+
+        <button id="scrape-button">Load</button>
+    </div>
+</body>
+</html>

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; connect-src 'self';">
+    <title>Browser View</title>
+    <link rel="stylesheet" href="./css/browser.css">
+</head>
+<body>
+    <h1>Waiting for URL...</h1>
+
+    <script>
+        // Listen for the update-url event sent by the main process
+        window.electron.onLoadURL((url) => {
+            console.log("URL received from main process:", url);
+            // You can update some content here based on the URL if needed
+            document.body.innerHTML = `<h1>Loading: ${url}</h1>`; // Show loading message or URL
+            // Set the URL for the BrowserView's webContents
+            window.electron.updateURL(url); // This could trigger the navigation in BrowserView
+        });
+    </script>
+</body>
+</html>
