@@ -7,12 +7,13 @@
     <link rel="stylesheet" href="./css/sidebar.css">
     <script type="module">
         import mappings from './mappings.js';
-        import bookieUrls from './bookieUrls.js'; // Import bookie URLs
-
+        import bookieUrls from './bookieUrls.js';
+        import scraperMappings from './scraperMappings.js'; // ✅ Import scraper mappings
+    
         window.onload = function () {
             const countrySelect = document.getElementById("country-selector");
             const bookieSelect = document.getElementById("bookie-selector");
-
+    
             // Populate country dropdown
             for (const country in mappings) {
                 let option = document.createElement("option");
@@ -20,12 +21,12 @@
                 option.textContent = country;
                 countrySelect.appendChild(option);
             }
-
-            // Update bookie dropdown based on country selection
+    
+            // Update bookie dropdown when country changes
             countrySelect.addEventListener("change", () => {
                 const selectedCountry = countrySelect.value;
-                bookieSelect.innerHTML = '<option value="">Select a Bookie</option>'; // Reset options
-
+                bookieSelect.innerHTML = '<option value="">Select a Bookie</option>';
+    
                 if (selectedCountry in mappings) {
                     mappings[selectedCountry].forEach(bookie => {
                         let option = document.createElement("option");
@@ -35,37 +36,60 @@
                     });
                 }
             });
-
-            // Load button logic
-            document.getElementById('scrape-button').addEventListener('click', () => {
-                const country = countrySelect.value;
-                const bookie = bookieSelect.value;
-                
-                if (!country || !bookie) {
-                    alert("Please select a country and a bookie.");
+    
+            // ✅ "Load" button logic
+            document.getElementById('load-button').addEventListener('click', async () => {
+                const selectedBookie = bookieSelect.value;
+    
+                if (!selectedBookie) {
+                    alert("Please select a bookie.");
                     return;
                 }
-
-                // Get the corresponding URL from bookieUrls.js
-                const url = bookieUrls[bookie];
-                
-                // Send the URL to the main process
-                if (url) {
-                    
-                    console.log("URL sent to main process:" + url);
-                    window.electron.updateURL(url); //send url to main process and mainprocess will send to browser view
-                    alert("URL sent to main process: " + url);
-                } else {
+    
+                const url = bookieUrls[selectedBookie] || "";
+                if (!url) {
                     alert("No URL found for the selected bookie.");
+                    return;
+                }
+    
+                console.log(`Loading site: ${url}`);
+                await window.electron.updateURL(url);
+            });
+    
+            // ✅ "Scrape" button logic
+            document.getElementById('scrape-button').addEventListener('click', async () => {
+                const selectedBookie = bookieSelect.value;
+                if (!selectedBookie) {
+                    alert("Please select a bookie.");
+                    return;
+                }
+    
+                const scraperName = scraperMappings[selectedBookie]; // ✅ Auto-select the scraper
+                if (!scraperName) {
+                    alert("No scraper found for the selected bookie.");
+                    return;
+                }
+    
+                console.log(`Scraping with: ${scraperName}`);
+                const currentUrl = await window.electron.getCurrentURL();
+    
+                if (!currentUrl) {
+                    alert("No page is currently loaded.");
+                    return;
+                }
+    
+                const scrapeData = await window.electron.scrapePage(currentUrl, scraperName);
+                if (scrapeData.error) {
+                    alert("Scraping failed: " + scrapeData.error);
+                } else {
+                    alert(`Page Title: ${scrapeData.title}\nScraped Data: ${scrapeData.someData}`);
                 }
             });
         };
     </script>
+    
 </head>
 <body>
-    <script>
-        console.log("Renderer process started");
-    </script>
     <div class="sidebar">
         <h2>Menu</h2>
 
@@ -79,7 +103,11 @@
             <option value="">Select a Bookie</option>
         </select>
 
-        <button id="scrape-button">Load</button>
+        <button id="load-button">Load</button> <!-- ✅ Calls the correct scraper to load the site -->
+
+        <hr>
+
+        <button id="scrape-button">Scrape</button> <!-- ✅ Calls the same scraper to extract data -->
     </div>
 </body>
 </html>

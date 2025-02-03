@@ -3,6 +3,9 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('electron', {
     // Send URL to main process
     updateURL: (url) => ipcRenderer.send('update-url', url),
+
+    //get current URL
+    getCurrentURL: () => ipcRenderer.invoke('get-current-url'),
     
     // Invoke scrape-page from main process
     scrapePage: (url) => ipcRenderer.invoke('scrape-page', url),
@@ -15,4 +18,8 @@ contextBridge.exposeInMainWorld('electron', {
 
     // Get mappings from the main process
     getMappings: () => ipcRenderer.invoke('get-mappings'),
+
+    // startScraper: (scraperName) => ipcRenderer.invoke('start-scraper', scraperName),
+    // scrapeData: (scraperName) => ipcRenderer.invoke('scrape-data', scraperName),
+    scrapePage: (url, scraperName) => ipcRenderer.invoke('scrape-page', url, scraperName)
 });

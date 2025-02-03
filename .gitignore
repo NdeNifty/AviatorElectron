@@ -1,5 +1,18 @@
-node_modules
-build
-npm-debug.log
+# Ignore node_modules
+node_modules/
+
+# Ignore build artifacts
+dist/
+out/
+release/
+
+# Ignore environment variables
 .env
+
+# Ignore OS-specific files
 .DS_Store
+Thumbs.db
+
+# Ignore logs and debug files
+*.log
+*.tmp

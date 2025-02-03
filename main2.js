@@ -1,18 +1,20 @@
 const { app, BrowserWindow, BrowserView, ipcMain, dialog } = require('electron');
 const path = require('path');
-const scrapers = require('./scrapers'); // ✅ Import all scrapers dynamically
+const { Builder, By, until } = require('selenium-webdriver');
+const chrome = require('selenium-webdriver/chrome');
 
 let mainWindow;
 let sidebarView;
 let browserView;
 
-console.log("Hello from Electron!");
+// Function to read mappings from Python file
 
+console.log("Hello from Electron!");
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
-    show: false,
+    show: false, // Hide window until key validation is done
     webPreferences: {
       contextIsolation: true,
       enableRemoteModule: false,
@@ -21,7 +23,7 @@ function createWindow() {
     },
   });
 
-  askForProductKey();
+  askForProductKey(); // Ask for product key before loading the app
 }
 
 // 🔑 Product Key Input
@@ -42,9 +44,10 @@ function askForProductKey() {
 
   ipcMain.once('submit-product-key', (event, key) => {
     if (key === '1') {
+      
       inputWindow.close();
       mainWindow.show();
-      loadMainApp();
+      loadMainApp(); // ✅ Load sidebar and browser views here
     } else {
       dialog.showErrorBox('Error', 'Invalid product key. Exiting...');
       app.quit();
@@ -52,10 +55,11 @@ function askForProductKey() {
   });
 }
 
-// Load Sidebar & Browser Views
+// 🖥️ Load Sidebar & Browser Views After Validation
 function loadMainApp() {
   const { width, height } = mainWindow.getBounds();
 
+  // Sidebar View
   sidebarView = new BrowserView({
     webPreferences: {
       contextIsolation: true,
@@ -63,88 +67,79 @@ function loadMainApp() {
     },
   });
 
+  // Browser View
   browserView = new BrowserView({
     webPreferences: {
       contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js'),
-      nodeIntegration: false,
-      webSecurity: false,
-      allowRunningInsecureContent: true,
+    preload: path.join(__dirname, 'preload.js'),
+    nodeIntegration: false,
+    webSecurity: false,  // Disable web security
+    allowRunningInsecureContent: true, // Allow loading insecure content
     },
   });
 
+  // ✅ Attach Views Correctly
   mainWindow.addBrowserView(sidebarView);
   mainWindow.addBrowserView(browserView);
 
+  // Set initial positions and sizes
   sidebarView.setBounds({ x: 0, y: 0, width: 280, height });
   sidebarView.setAutoResize({ width: false, height: true });
 
   browserView.setBounds({ x: 280, y: 0, width: width - 280, height });
   browserView.setAutoResize({ width: true, height: true });
 
+  // Load content into views
   sidebarView.webContents.loadFile('sidebar.html');
   browserView.webContents.loadFile('browser.html');
 
+  // Adjust views when window resizes
   mainWindow.on('resize', () => {
     const { width, height } = mainWindow.getBounds();
     sidebarView.setBounds({ x: 0, y: 0, width: 280, height });
     browserView.setBounds({ x: 280, y: 0, width: width - 280, height });
   });
+
+  // // Handle URL updates from sidebar
+  // ipcMain.on('update-url', (event, url) => {
+  //   browserView.webContents.send('load-url', url);
+  // });
 }
 
-// ✅ Handle URL updates from sidebar
-ipcMain.on('update-url', (event, url) => {
+app.whenReady().then(createWindow);
+
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') app.quit();
+
+// 🕵️‍♂️ Handle Scraping
+ipcMain.handle('scrape-page', async (event, url) => {
+  const options = new chrome.Options();
+  options.addArguments('--headless');
+
+  const driver = await new Builder()
+    .forBrowser('chrome')
+    .setChromeOptions(options)
+    .build();
+
+  try {
+    await driver.get(url);
+    await driver.wait(until.elementLocated(By.css('body')), 10000);
+    const title = await driver.getTitle();
+    return { title };
+  } finally {
+    await driver.quit();
+  }
+});
+});
+
+// listen for the 'update-url' event from the renderer process
+ipcMain.once('update-url', (event, url) => {
+  
   if (browserView) {
+    browserView.webContents.send('load-url', url); // Send URL to browserView's renderer
     console.log("URL received in main process:", url);
-    browserView.webContents.loadURL(url);
+    browserView.webContents.loadURL(url); // Load the URL in the BrowserView
   } else {
     console.error("BrowserView is not available.");
   }
-});
-
-// ✅ Start the appropriate scraper when "Load" is clicked
-ipcMain.handle('start-scraper', async (event, scraperName) => {
-  try {
-    console.log("Starting scraper:", scraperName);
-
-    // ✅ Use the dynamic import from `scrapers/index.js`
-    const scraper = scrapers[scraperName];
-
-    if (!scraper || typeof scraper.startScraper !== 'function') {
-      throw new Error(`Scraper '${scraperName}' not found or missing startScraper()`);
-    }
-
-    const result = await scraper.startScraper();
-    return result;
-  } catch (error) {
-    console.error("Scraper failed:", error);
-    return { error: error.message || "Scraper failed to start." };
-  }
-});
-
-// ✅ Extract data from the already running scraper when "Scrape" is clicked
-ipcMain.handle('scrape-data', async (event, scraperName) => {
-  try {
-    console.log("Extracting data using:", scraperName);
-
-    const scraper = scrapers[scraperName];
-
-    if (!scraper || typeof scraper.scrapeData !== 'function') {
-      throw new Error(`Scraper '${scraperName}' not found or missing scrapeData()`);
-    }
-
-    const result = await scraper.scrapeData();
-    return result;
-  } catch (error) {
-    console.error("Scraping failed:", error);
-    return { error: error.message || "Scraping failed." };
-  }
-});
-
-// 🚀 Start Electron App
-app.whenReady().then(createWindow);
-
-// 🛑 Quit when all windows are closed (except macOS)
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
 });
