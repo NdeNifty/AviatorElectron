@@ -1,5 +1,6 @@
+//This files maps the bookienames(on the left) to the scraperfiles(on the right) in the scrappers folder.
 const scraperMappings = {
-    "BetPawa Cm": "scrapeBetPawaCm",
+    "BetPawa Cm": "betpawacm",
     "BetPawa Gh": "betpawagh",
     "BetPawa Ng": "betpawang",
     "SportyBet Gh": "sportybetgh",

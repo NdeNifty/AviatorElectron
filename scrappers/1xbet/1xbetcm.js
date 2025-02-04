@@ -1,6 +1,6 @@
 const puppeteer = require('puppeteer');
 
-async function scrape1xBetCm(url) {
+async function startScraper(url) {
     console.log("Launching Puppeteer for 1xBetCm...");
 
     const browser = await puppeteer.launch({ headless: true });
@@ -19,7 +19,6 @@ async function scrape1xBetCm(url) {
         });
 
         await browser.close();
-
         return { title, matches };
     } catch (error) {
         console.error("Error during scraping:", error);
@@ -28,4 +27,4 @@ async function scrape1xBetCm(url) {
     }
 }
 
-module.exports = { scrape1xBetCm };
+module.exports = { startScraper };

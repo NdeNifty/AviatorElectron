@@ -131,6 +131,7 @@ ipcMain.handle('scrape-page', async (event, currentUrl, scraperName) => {
   console.log("Received scraperName in main process:", scraperName);
   try {
     console.log("Starting scraper:", scraperName);
+    console.log("All scrapers:", scrapers);
 
     // ✅ Use the dynamic import from `scrapers/index.js`
     const scraper = scrapers[scraperName];
