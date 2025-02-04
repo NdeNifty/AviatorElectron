@@ -1,6 +1,6 @@
 const { app, BrowserWindow, BrowserView, ipcMain, dialog } = require('electron');
 const path = require('path');
-const scrapers = require('./scrapers'); // ✅ Import all scrapers dynamically
+const scrapers = require('./scrappers'); // ✅ Import all scrapers dynamically
 
 let mainWindow;
 let sidebarView;
@@ -16,12 +16,20 @@ function createWindow() {
     webPreferences: {
       contextIsolation: true,
       enableRemoteModule: false,
-      nodeIntegration: false,
+      nodeIntegration: true,
       preload: path.join(__dirname, 'preload.js'),
     },
   });
 
   askForProductKey();
+
+
+   // Open Developer Tools in Electron window
+  mainWindow.webContents.openDevTools();
+  mainWindow.focus();
+  setTimeout(() => {
+    mainWindow.setAlwaysOnTop(false);
+}, 40000); // Change 2000ms to a time that works best for you
 }
 
 // 🔑 Product Key Input
@@ -85,6 +93,10 @@ function loadMainApp() {
   sidebarView.webContents.loadFile('sidebar.html');
   browserView.webContents.loadFile('browser.html');
 
+  //dev tools
+  sidebarView.webContents.openDevTools();
+  browserView.webContents.openDevTools();
+
   mainWindow.on('resize', () => {
     const { width, height } = mainWindow.getBounds();
     sidebarView.setBounds({ x: 0, y: 0, width: 280, height });
@@ -102,8 +114,21 @@ ipcMain.on('update-url', (event, url) => {
   }
 });
 
-// ✅ Start the appropriate scraper when "Load" is clicked
-ipcMain.handle('start-scraper', async (event, scraperName) => {
+// Get current Url 'get-current-url' request and return the current URL
+ipcMain.handle('get-current-url', async () => {
+  if (browserView && browserView.webContents) {
+    const currentUrl = browserView.webContents.getURL();
+    console.log("Current URL:", currentUrl);
+    return currentUrl;
+  } else {
+    console.error("No active browser view found.");
+    return null;
+  }
+});
+
+// ✅ Start the appropriate scraper when "Scrape" is clicked
+ipcMain.handle('scrape-page', async (event, currentUrl, scraperName) => {
+  console.log("Received scraperName in main process:", scraperName);
   try {
     console.log("Starting scraper:", scraperName);
 

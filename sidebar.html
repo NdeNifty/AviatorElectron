@@ -57,34 +57,40 @@
             });
     
             // ✅ "Scrape" button logic
+
             document.getElementById('scrape-button').addEventListener('click', async () => {
-                const selectedBookie = bookieSelect.value;
-                if (!selectedBookie) {
-                    alert("Please select a bookie.");
-                    return;
-                }
-    
-                const scraperName = scraperMappings[selectedBookie]; // ✅ Auto-select the scraper
-                if (!scraperName) {
-                    alert("No scraper found for the selected bookie.");
-                    return;
-                }
-    
-                console.log(`Scraping with: ${scraperName}`);
-                const currentUrl = await window.electron.getCurrentURL();
-    
-                if (!currentUrl) {
-                    alert("No page is currently loaded.");
-                    return;
-                }
-    
-                const scrapeData = await window.electron.scrapePage(currentUrl, scraperName);
-                if (scrapeData.error) {
-                    alert("Scraping failed: " + scrapeData.error);
-                } else {
-                    alert(`Page Title: ${scrapeData.title}\nScraped Data: ${scrapeData.someData}`);
-                }
-            });
+  const selectedBookie = bookieSelect.value;
+  if (!selectedBookie) {
+    alert("Please select a bookie.");
+    return;
+  }
+
+  const scraperName = scraperMappings[selectedBookie]; // Fetch the scraper name
+  console.log("Selected Bookie:", selectedBookie); 
+  console.log("Scraper Name:", scraperName);
+
+  if (!scraperName) {
+    alert("No scraper found for the selected bookie.");
+    return;
+  }
+
+  // Get the current URL from the browser view
+  const currentUrl = await window.electron.getCurrentURL();
+  console.log("Current URL:", currentUrl);
+
+  if (!currentUrl) {
+    alert("No page is currently loaded.");
+    return;
+  }
+
+  // Call the scraper with the current URL and scraper name
+  const scrapeData = await window.electron.scrapePage(currentUrl, scraperName);
+  if (scrapeData.error) {
+    alert("Scraping failed: " + scrapeData.error);
+  } else {
+    alert(`Page Title: ${scrapeData.title}\nScraped Data: ${scrapeData.someData}`);
+  }
+});
         };
     </script>
     

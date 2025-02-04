@@ -1,5 +1,5 @@
 const scraperMappings = {
-    "BetPawa Cm": "betpawacm",
+    "BetPawa Cm": "scrapeBetPawaCm",
     "BetPawa Gh": "betpawagh",
     "BetPawa Ng": "betpawang",
     "SportyBet Gh": "sportybetgh",
