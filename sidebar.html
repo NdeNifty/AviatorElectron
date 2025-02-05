@@ -1,119 +1,90 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sidebar</title>
-    <link rel="stylesheet" href="./css/sidebar.css">
+    <link rel="stylesheet" href="./css/sidebar.css" />
     <script type="module">
-        import mappings from './mappings.js';
-        import bookieUrls from './bookieUrls.js';
-        import scraperMappings from './scraperMappings.js'; // ✅ Import scraper mappings
-    
-        window.onload = function () {
-            const countrySelect = document.getElementById("country-selector");
-            const bookieSelect = document.getElementById("bookie-selector");
-    
-            // Populate country dropdown
-            for (const country in mappings) {
-                let option = document.createElement("option");
-                option.value = country;
-                option.textContent = country;
-                countrySelect.appendChild(option);
+      import mappings from "./mappings.js";
+      import bookieUrls from "./bookieUrls.js";
+      import scraperMappings from "./scraperMappings.js"; // ✅ Import scraper mappings
+
+      window.onload = function () {
+        const countrySelect = document.getElementById("country-selector");
+        const bookieSelect = document.getElementById("bookie-selector");
+
+        // Populate country dropdown
+        for (const country in mappings) {
+          let option = document.createElement("option");
+          option.value = country;
+          option.textContent = country;
+          countrySelect.appendChild(option);
+        }
+
+        // Update bookie dropdown when country changes
+        countrySelect.addEventListener("change", () => {
+          const selectedCountry = countrySelect.value;
+          bookieSelect.innerHTML = '<option value="">Select a Bookie</option>';
+
+          if (selectedCountry in mappings) {
+            mappings[selectedCountry].forEach((bookie) => {
+              let option = document.createElement("option");
+              option.value = bookie;
+              option.textContent = bookie;
+              bookieSelect.appendChild(option);
+            });
+          }
+        });
+
+        document
+          .getElementById("load-button")
+          .addEventListener("click", async () => {
+            const selectedBookie =
+              document.getElementById("bookie-selector").value;
+            if (!selectedBookie) {
+              alert("Please select a bookie.");
+              return;
             }
-    
-            // Update bookie dropdown when country changes
-            countrySelect.addEventListener("change", () => {
-                const selectedCountry = countrySelect.value;
-                bookieSelect.innerHTML = '<option value="">Select a Bookie</option>';
-    
-                if (selectedCountry in mappings) {
-                    mappings[selectedCountry].forEach(bookie => {
-                        let option = document.createElement("option");
-                        option.value = bookie;
-                        option.textContent = bookie;
-                        bookieSelect.appendChild(option);
-                    });
-                }
-            });
-    
-            // ✅ "Load" button logic
-            document.getElementById('load-button').addEventListener('click', async () => {
-                const selectedBookie = bookieSelect.value;
-    
-                if (!selectedBookie) {
-                    alert("Please select a bookie.");
-                    return;
-                }
-    
-                const url = bookieUrls[selectedBookie] || "";
-                if (!url) {
-                    alert("No URL found for the selected bookie.");
-                    return;
-                }
-    
-                console.log(`Loading site: ${url}`);
-                await window.electron.updateURL(url);
-            });
-    
-            // ✅ "Scrape" button logic
 
-            document.getElementById('scrape-button').addEventListener('click', async () => {
-  const selectedBookie = bookieSelect.value;
-  if (!selectedBookie) {
-    alert("Please select a bookie.");
-    return;
-  }
+            const url = bookieUrls[selectedBookie] || "";
+            if (!url) {
+              alert("No URL found for the selected bookie.");
+              return;
+            }
 
-  const scraperName = scraperMappings[selectedBookie]; // Fetch the scraper name
-  console.log("Selected Bookie:", selectedBookie); 
-  console.log("Scraper Name:", scraperName);
+            console.log(`Loading site in BrowserView: ${url}`);
+            await window.electron.updateURL(url); // ✅ Load in BrowserView
 
-  if (!scraperName) {
-    alert("No scraper found for the selected bookie.");
-    return;
-  }
+            // ✅ Automatically start Puppeteer after loading
+            const scraperName = scraperMappings[selectedBookie];
+            if (!scraperName) {
+              alert("No scraper found for the selected bookie.");
+              return;
+            }
 
-  // Get the current URL from the browser view
-  const currentUrl = await window.electron.getCurrentURL();
-  console.log("Current URL:", currentUrl);
-
-  if (!currentUrl) {
-    alert("No page is currently loaded.");
-    return;
-  }
-
-  // Call the scraper with the current URL and scraper name
-  const scrapeData = await window.electron.scrapePage(currentUrl, scraperName);
-  if (scrapeData.error) {
-    alert("Scraping failed: " + scrapeData.error);
-  } else {
-    alert(`Page Title: ${scrapeData.title}\nScraped Data: ${scrapeData.someData}`);
-  }
-});
-        };
+            console.log(`Starting scraper: ${scraperName}`);
+            await window.electron.scrapePage(url, scraperName);
+          });
+      };
     </script>
-    
-</head>
-<body>
+  </head>
+  <body>
     <div class="sidebar">
-        <h2>Menu</h2>
+      <h2>Menu</h2>
 
-        <label for="country-selector">Select Country:</label>
-        <select id="country-selector">
-            <option value="">Select a Country</option>
-        </select>
+      <label for="country-selector">Select Country:</label>
+      <select id="country-selector">
+        <option value="">Select a Country</option>
+      </select>
 
-        <label for="bookie-selector">Select Bookie:</label>
-        <select id="bookie-selector">
-            <option value="">Select a Bookie</option>
-        </select>
+      <label for="bookie-selector">Select Bookie:</label>
+      <select id="bookie-selector">
+        <option value="">Select a Bookie</option>
+      </select>
 
-        <button id="load-button">Load</button> <!-- ✅ Calls the correct scraper to load the site -->
-
-        <hr>
-
-        <button id="scrape-button">Scrape</button> <!-- ✅ Calls the same scraper to extract data -->
+      <button id="load-button">Load & Scrape</button>
+      <!-- ✅ Unified button for loading and scraping -->
     </div>
-</body>
+  </body>
 </html>

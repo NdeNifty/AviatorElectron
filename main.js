@@ -107,12 +107,13 @@ function loadMainApp() {
 // ✅ Handle URL updates from sidebar
 ipcMain.on('update-url', (event, url) => {
   if (browserView) {
-    console.log("URL received in main process:", url);
-    browserView.webContents.loadURL(url);
+      console.log("Loading URL in BrowserView:", url);
+      browserView.webContents.loadURL(url); // ✅ Load website inside BrowserView
   } else {
-    console.error("BrowserView is not available.");
+      console.error("BrowserView is not available.");
   }
 });
+
 
 // Get current Url 'get-current-url' request and return the current URL
 ipcMain.handle('get-current-url', async () => {
@@ -126,27 +127,29 @@ ipcMain.handle('get-current-url', async () => {
   }
 });
 
-// ✅ Start the appropriate scraper when "Scrape" is clicked
-ipcMain.handle('scrape-page', async (event, currentUrl, scraperName) => {
-  console.log("Received scraperName in main process:", scraperName);
+// ✅ Start the scraper when "Scrape" is clicked in the browser view
+ipcMain.handle('scrape-page', async (event, _, scraperName) => {
+  console.log("Starting scraper for:", scraperName);
+
   try {
-    console.log("Starting scraper:", scraperName);
-    console.log("All scrapers:", scrapers);
+      const scrapers = require('./scrappers');
+      const scraper = scrapers[scraperName];
 
-    // ✅ Use the dynamic import from `scrapers/index.js`
-    const scraper = scrapers[scraperName];
+      if (!scraper || typeof scraper.startScraper !== 'function') {
+          throw new Error(`Scraper '${scraperName}' not found or missing startScraper()`);
+      }
 
-    if (!scraper || typeof scraper.startScraper !== 'function') {
-      throw new Error(`Scraper '${scraperName}' not found or missing startScraper()`);
-    }
-
-    const result = await scraper.startScraper();
-    return result;
+      console.log("Connecting Puppeteer to BrowserView...");
+      const result = await scraper.startScraper();
+      
+      console.log("Scraper finished:", result);
+      return result;
   } catch (error) {
-    console.error("Scraper failed:", error);
-    return { error: error.message || "Scraper failed to start." };
+      console.error("Scraper failed:", error);
+      return { error: error.message || "Scraper failed to start." };
   }
 });
+
 
 // ✅ Extract data from the already running scraper when "Scrape" is clicked
 ipcMain.handle('scrape-data', async (event, scraperName) => {
@@ -166,6 +169,10 @@ ipcMain.handle('scrape-data', async (event, scraperName) => {
     return { error: error.message || "Scraping failed." };
   }
 });
+
+// modifying electron to work in debig mode.
+app.commandLine.appendSwitch('remote-debugging-port', '9222'); // ✅ Enable remote debugging
+
 
 // 🚀 Start Electron App
 app.whenReady().then(createWindow);
