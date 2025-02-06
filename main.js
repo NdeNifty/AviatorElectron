@@ -24,9 +24,9 @@ function createWindow() {
   askForProductKey();
 
 
-   // Open Developer Tools in Electron window
-  mainWindow.webContents.openDevTools();
-  mainWindow.focus();
+  //  // Open Developer Tools in Electron window
+  // mainWindow.webContents.openDevTools();
+  // mainWindow.focus();
   setTimeout(() => {
     mainWindow.setAlwaysOnTop(false);
 }, 40000); // Change 2000ms to a time that works best for you
@@ -64,45 +64,52 @@ function askForProductKey() {
 function loadMainApp() {
   const { width, height } = mainWindow.getBounds();
 
+  // ✅ Create Sidebar View
   sidebarView = new BrowserView({
-    webPreferences: {
-      contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js'),
-    },
+      webPreferences: {
+          contextIsolation: true,
+          preload: path.join(__dirname, 'preload.js'),
+      },
   });
 
+  // ✅ Create Browser View
   browserView = new BrowserView({
-    webPreferences: {
-      contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js'),
-      nodeIntegration: false,
-      webSecurity: false,
-      allowRunningInsecureContent: true,
-    },
+      webPreferences: {
+          contextIsolation: true,
+          preload: path.join(__dirname, 'preload.js'),
+          nodeIntegration: false,
+          webSecurity: false,
+          allowRunningInsecureContent: true,
+      },
   });
 
-  mainWindow.addBrowserView(sidebarView);
-  mainWindow.addBrowserView(browserView);
+  // ✅ Ensure both views are added explicitly
+  mainWindow.setBrowserView(browserView);  // Forces BrowserView to be active
+  mainWindow.addBrowserView(sidebarView);  // Keeps SidebarView separate
 
+  // ✅ Correct Boundaries for Sidebar & Browser View
   sidebarView.setBounds({ x: 0, y: 0, width: 280, height });
   sidebarView.setAutoResize({ width: false, height: true });
 
   browserView.setBounds({ x: 280, y: 0, width: width - 280, height });
   browserView.setAutoResize({ width: true, height: true });
 
+  // ✅ Load Sidebar & Browser Separately
   sidebarView.webContents.loadFile('sidebar.html');
   browserView.webContents.loadFile('browser.html');
 
-  //dev tools
-  sidebarView.webContents.openDevTools();
-  browserView.webContents.openDevTools();
+  // ✅ Debugging: Check Which View is Active
+  console.log("SidebarView URL:", sidebarView.webContents.getURL());
+  console.log("BrowserView URL:", browserView.webContents.getURL());
 
+  // ✅ Prevent Views from Overwriting Each Other
   mainWindow.on('resize', () => {
-    const { width, height } = mainWindow.getBounds();
-    sidebarView.setBounds({ x: 0, y: 0, width: 280, height });
-    browserView.setBounds({ x: 280, y: 0, width: width - 280, height });
+      const { width, height } = mainWindow.getBounds();
+      sidebarView.setBounds({ x: 0, y: 0, width: 280, height });
+      browserView.setBounds({ x: 280, y: 0, width: width - 280, height });
   });
 }
+
 
 // ✅ Handle URL updates from sidebar
 ipcMain.on('update-url', (event, url) => {
