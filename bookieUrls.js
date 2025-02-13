@@ -1,6 +1,6 @@
 const bookieUrls = {
     "888Aviator Zm": "",
-    "1xbet Nigeria": "https://netflix.com",
+    "1xbet Ng": "https://1xbet.ng/en",
     "BetPawa Cm": "https://betpawa.cm",
     "BetPawa Gh": "https://www.betpawa.gh",
     "BetPawa Ke": "",

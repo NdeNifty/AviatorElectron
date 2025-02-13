@@ -10,6 +10,7 @@ const scraperMappings = {
     "PariPesa Ng": "paripesang",
     "PariPesa Zm": "paripesazm",
     "888Aviator Zm": "888aviatorzm",
+    "1xbet Ng": "1xbetng",
 };
 
 export default scraperMappings;

@@ -1,6 +1,6 @@
 const mappings = {
     "Ghana": ["SportyBet Gh", "Betway Gh", "BetPawa Gh"],
-    "Nigeria": ["SportyBet Ng", "BetPawa Ng", "Betway Ng", "PariPesa Ng"],
+    "Nigeria": ["SportyBet Ng", "BetPawa Ng", "Betway Ng", "PariPesa Ng", "1xbet Ng"],
     "Cameroon": ["BetPawa Cm", "PariPesa Cm"],
     "Kenya": ["BetPawa Ke", "Betway Ke"],
     "Uganda": ["BetPawa Ug", "Betway Ug"],
