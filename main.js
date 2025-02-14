@@ -69,6 +69,7 @@ function loadMainApp() {
       webPreferences: {
           contextIsolation: true,
           preload: path.join(__dirname, 'preload.js'),
+          backgroundThrottling: false,
       },
   });
 
@@ -80,6 +81,7 @@ function loadMainApp() {
           nodeIntegration: false,
           webSecurity: false,
           allowRunningInsecureContent: true,
+          backgroundThrottling: false,
       },
   });
 
