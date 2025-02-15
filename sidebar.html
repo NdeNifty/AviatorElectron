@@ -70,6 +70,11 @@
     </script>
   </head>
   <body>
+    <script>
+      window.electron.onUpdateBalance((balance) => {
+        document.getElementById("balance-value").textContent = balance;
+      });
+    </script>
     <div class="sidebar">
       <h2>Menu</h2>
 
@@ -84,7 +89,10 @@
       </select>
 
       <button id="load-button">Load & Scrape</button>
-      <!-- ✅ Unified button for loading and scraping -->
+      <div class="balance-container">
+        <span>Balance</span>
+        <span id="balance-value"></span>
+      </div>
     </div>
   </body>
 </html>

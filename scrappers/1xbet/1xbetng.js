@@ -109,7 +109,7 @@ async function startScraper() {
                 if (aviatorLink) {
                     await aviatorLink.click();
                     console.log("Clicked the Aviator tab.");
-                    await aviatorbot(page);
+                    await aviatorbot(page, ipcMain);
                     break;
                 }
             } catch (error) {

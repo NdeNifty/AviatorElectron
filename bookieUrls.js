@@ -1,6 +1,7 @@
 const bookieUrls = {
     "888Aviator Zm": "",
     "1xbet Ng": "https://1xbet.ng/en",
+    "1xbet Cm": "https://1xbet.cm/en",
     "BetPawa Cm": "https://betpawa.cm",
     "BetPawa Gh": "https://www.betpawa.gh",
     "BetPawa Ke": "",
@@ -26,6 +27,7 @@ const bookieUrls = {
     "PariPesa Zm": "",
     "PariPesa Cm": "",
     "SportyBet Gh": "",
+    "SportyBet Ng": "https://www.sportybet.com/ng/",
     "SportyBet Tg": ""
   };
   

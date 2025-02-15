@@ -23,5 +23,8 @@ contextBridge.exposeInMainWorld('electron', {
 
     // startScraper: (scraperName) => ipcRenderer.invoke('start-scraper', scraperName),
     // scrapeData: (scraperName) => ipcRenderer.invoke('scrape-data', scraperName),
-    scrapePage: (currentUrl, scraperName) => ipcRenderer.invoke('scrape-page', currentUrl, scraperName)
+    scrapePage: (currentUrl, scraperName) => ipcRenderer.invoke('scrape-page', currentUrl, scraperName),
+
+    //send balance from browserView to sidebarView
+    onUpdateBalance: (callback) => ipcRenderer.on('update-balance', (event, balance) => callback(balance))
 });

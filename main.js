@@ -179,6 +179,19 @@ ipcMain.handle('scrape-data', async (event, scraperName) => {
   }
 });
 
+
+
+// ✅ **Listen for balance update from Puppeteer browserView via preload**
+ipcMain.on('balance-updated', (event, balance) => {
+  console.log("Received balance update:", balance);
+  if (sidebarView && sidebarView.webContents) {
+      sidebarView.webContents.send('update-balance', balance); // ✅ Send to sidebar
+  }
+});
+
+
+
+
 // modifying electron to work in debig mode.
 app.commandLine.appendSwitch('remote-debugging-port', '9222'); // ✅ Enable remote debugging
 
