@@ -35,7 +35,7 @@ const bookieUrls = {
     "PariPesa Tz": "https://paripesa.com/en",
     "PariPesa Ug": "https://paripesa.com/en",
     "PariPesa Za": "https://paripesa.com/en",
-    "SportyBet Gh": "",
+    "SportyBet Gh": "https://www.sportybet.com/gh",
     "SportyBet Ng": "https://www.sportybet.com/ng/",
     "SportyBet Tg": ""
   };
