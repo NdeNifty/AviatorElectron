@@ -1,5 +1,6 @@
 const puppeteer = require('puppeteer-core');
 const aviatorbot = require('../aviatorbot');
+const {ipcMain} = require('electron');
 
 async function startScraper() {
     console.log("Attaching Puppeteer to Electron’s existing BrowserView...");
@@ -122,7 +123,7 @@ async function startScraper() {
                 if (aviatorLink) {
                     await aviatorLink.click();
                     console.log("Clicked the Aviator tab.");
-                    await aviatorbot(page);
+                    await aviatorbot(page, ipcMain);
                     break;
                 }
             } catch (error) {

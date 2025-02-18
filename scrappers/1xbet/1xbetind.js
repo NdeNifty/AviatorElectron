@@ -1,5 +1,6 @@
 const puppeteer = require('puppeteer-core');
 const aviatorbot = require('../aviatorbot');
+const {ipcMain} = require('electron');
 
 async function startScraper() {
     console.log("Attaching Puppeteer to Electron’s existing BrowserView...");
@@ -7,28 +8,39 @@ async function startScraper() {
     const browser = await puppeteer.connect({
         browserURL: 'http://localhost:9222',
         defaultViewport: null,
-        ignoreHTTPSErrors: true
+        ignoreHTTPSErrors: true,
+        args: ['--disable-cache', '--no-sandbox']
     });
 
     console.log("Puppeteer connected to Electron browser.");
 
     try {
-        const target = await browser.waitForTarget(target => target.type() === "page", { timeout: 10000 });
+        // Get all targets and log their URLs
+        const targets = await browser.targets();
+        console.log("Available targets:");
+        targets.forEach(target => {
+            console.log(`Target URL: ${target.url()}, Type: ${target.type()}`);
+        });
 
+        // Wait for the BrowserView target (not sidebar.html)
+        const target = await browser.waitForTarget(
+            target => target.type() === "page" && !target.url().includes("sidebar.html"),
+            { timeout: 10000 }
+        );
         if (!target) throw new Error("No BrowserView page found.");
 
         const page = await target.page();
-        setInterval(async () => {
-            await page.evaluate(() => {
-                window.dispatchEvent(new Event('resize')); // Triggers a UI refresh
-            });
-        }, 2000); // Runs every 2 seconds
-        
         console.log("Attached to BrowserView tab:", page.url());
 
+        // Wait for the page to stabilize (initial load)
+        await page.waitForNavigation({ waitUntil: 'networkidle0', timeout: 15000 }).catch(() => console.log("Initial navigation timeout, proceeding..."));
+
         // ✅ **Check if user is already logged in**
+        console.log("Checking login status...");
         let isUserLoggedIn = await page.evaluate(() => {
-            return document.querySelector(".balance-currency__name") !== null;
+            const balance = document.querySelector(".balance-currency__name");
+            console.log("Balance element:", balance);
+            return balance !== null;
         });
 
         if (!isUserLoggedIn) {
@@ -38,7 +50,9 @@ async function startScraper() {
             for (let i = 0; i < 3; i++) { // Retry up to 3 times
                 // 🔄 **Re-check login status**
                 isUserLoggedIn = await page.evaluate(() => {
-                    return document.querySelector(".balance-currency__name") !== null;
+                    const balance = document.querySelector(".balance-currency__name");
+                    console.log("Balance element:", balance);
+                    return balance !== null;
                 });
 
                 if (isUserLoggedIn) {
@@ -69,7 +83,7 @@ async function startScraper() {
 
         // ✅ **Proceed to More Games**
         console.log("Proceeding to More Games...");
-       // ✅ Wait for the "More" element and hover over it
+        // ✅ Wait for the "More" element and hover over it
         let moreMenuItem = null;
         for (let i = 0; i < 3; i++) { // Retry up to 3 times
             moreMenuItem = await page.waitForSelector('span ::-p-text(More)', { visible: true, timeout: 10000 }).catch(() => null);

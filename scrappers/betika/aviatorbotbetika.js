@@ -1,4 +1,4 @@
-async function aviatorBotSporty(aviatorIframe, ipcMain) {
+async function aviatorBotBetika(aviatorIframe, ipcMain) {
     console.log("Aviator Bot started...");
 
     try {
@@ -10,6 +10,7 @@ async function aviatorBotSporty(aviatorIframe, ipcMain) {
         const htmlContainsAmount = iframeHtml.includes('amount') || iframeHtml.includes('"amount"');
 
         if (htmlContainsAmount) {
+            console.log("Aviator game loaded and amount element found.");
             let amountElement = null;
             const MAX_RETRIES = 15;
             let attempts = 0;
@@ -100,4 +101,4 @@ async function aviatorBotSporty(aviatorIframe, ipcMain) {
     }
 }
 
-module.exports = aviatorBotSporty;
+module.exports = aviatorBotBetika;

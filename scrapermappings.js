@@ -25,6 +25,9 @@ const scraperMappings = {
     "1xbet Ke": "1xbetke",
     "1xbet Ind": "1xbetind",
     "1xbet Bra": "1xbetbra",
+    "Betika Ke": "betikake",
+    "Betika Ug": "betikauh",
+    "Betika Gh": "betikagh",
 
 };
 
