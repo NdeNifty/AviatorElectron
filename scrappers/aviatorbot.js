@@ -1,3 +1,6 @@
+// aviatorBot.js
+const { openAiPredictNextPayout } = require("../models/openAi");
+
 async function aviatorBot(page, ipcMain) {
     console.log("Aviator Bot started...");
 
@@ -112,7 +115,7 @@ async function aviatorBot(page, ipcMain) {
         }
     }
 
-    // Function to continuously monitor for updates to the latest payout, print results, and pass to API function
+    // Function to continuously monitor for updates to the latest payout, print results, and call OpenAI API
     async function monitorPayouts() {
         let lastPayoutValue = null; // Track the last seen payout value
         while (true) { // Run indefinitely until stopped
@@ -138,8 +141,15 @@ async function aviatorBot(page, ipcMain) {
                 if (newPayout !== null && newPayout !== lastPayoutValue) {
                     results.push(newPayout);
                     console.log("Updated payouts:", results); // Print the full results array to the console
-                    // Pass the results array to the API call function (no emit)
-                    makeApiCall(results);
+
+                    // Call OpenAI API to predict the next payout and log the response
+                    try {
+                        const apiResponse = await openAiPredictNextPayout(results);
+                        console.log("API Response:", apiResponse); // Log the API response
+                    } catch (error) {
+                        console.error("Failed to get API response:", error.message);
+                    }
+
                     lastPayoutValue = newPayout; // Update the last seen value
                 }
 
@@ -165,7 +175,6 @@ async function aviatorBot(page, ipcMain) {
     monitorPayouts().catch(error => console.error("Payout monitoring failed:", error));
 
     // Keep the function running indefinitely (no timeout, as monitoring is continuous)
-    // You can add a stopping condition (e.g., via external signal or manual break)
     await new Promise(() => {}); // Keep the function running indefinitely
 
     // Cleanup (this will only be reached if the loop breaks, e.g., on error)
@@ -175,17 +184,3 @@ async function aviatorBot(page, ipcMain) {
 }
 
 module.exports = aviatorBot;
-
-// Mock function for API call (in the same file)
-function makeApiCall(payouts) {
-    console.log("Making API call with payouts:", payouts);
-    // Mock API call logic (simulate sending data to an endpoint)
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            console.log("API call completed successfully for payouts:", payouts);
-            resolve({ status: "success", data: payouts });
-        }, 1000); // Simulate network delay
-    }).catch(error => {
-        console.error("Mock API call failed:", error);
-    });
-}

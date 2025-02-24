@@ -1,3 +1,6 @@
+// aviatorBot.js
+const { openAiPredictNextPayout } = require("../../models/openAi");
+
 async function aviatorBotBetika(aviatorIframe, ipcMain) {
     console.log("Aviator Bot started...");
 
@@ -45,7 +48,7 @@ async function aviatorBotBetika(aviatorIframe, ipcMain) {
                 throw new Error("Aviator game not loaded correctly. '.amount' not found in iframe.");
             }
 
-            // Get the initial balance from the iframe (same context as payouts)
+            // Get the initial balance from the iframe
             let lastBalance = await aviatorIframe.evaluate(() => {
                 const amount = document.querySelector('span.amount');
                 return amount ? amount.textContent.trim() : null;
@@ -60,10 +63,10 @@ async function aviatorBotBetika(aviatorIframe, ipcMain) {
             // Emit the initial balance to the renderer
             ipcMain.emit('balance-updated', null, lastBalance);
 
-            // Initialize results array with all existing payouts from the iframe (same context)
+            // Initialize results array with all existing payouts from the iframe
             let results = await fetchAllExistingPayouts(aviatorIframe);
 
-            // Function to fetch all existing payouts and initialize the results array within the iframe
+            // Function to fetch all existing payouts and initialize the results array
             async function fetchAllExistingPayouts(iframe) {
                 let initialResults = [];
                 try {
@@ -105,7 +108,7 @@ async function aviatorBotBetika(aviatorIframe, ipcMain) {
                 }
             }
 
-            // Function to fetch the latest payout (first .payout element) within the iframe
+            // Function to fetch the latest payout (first .payout element)
             async function fetchLatestPayout(iframe) {
                 try {
                     console.log("Checking for latest payout in iframe...");
@@ -121,7 +124,7 @@ async function aviatorBotBetika(aviatorIframe, ipcMain) {
                         return null;
                     }
 
-                    // Get the first payout (latest multiplier, assuming it's at the start)
+                    // Get the first payout (latest multiplier)
                     let latestPayout = payoutElements[0];
                     let multiplierValue = await latestPayout.$('.bubble-multiplier.font-weight-bold');
                     if (multiplierValue) {
@@ -145,12 +148,12 @@ async function aviatorBotBetika(aviatorIframe, ipcMain) {
                 }
             }
 
-            // Function to continuously monitor for updates to the latest payout, print results, and pass to API function
+            // Function to continuously monitor payouts and call OpenAI prediction
             async function monitorPayouts(iframe) {
                 let lastPayoutValue = null; // Track the last seen payout value
-                while (true) { // Run indefinitely until stopped
+                while (true) { // Run indefinitely
                     try {
-                        // Wait for changes in the first payout's value within the iframe
+                        // Wait for changes in the first payout's value
                         await iframe.waitForFunction(
                             (prevValue) => {
                                 const payoutsBlock = document.querySelector('.payouts-block');
@@ -166,13 +169,20 @@ async function aviatorBotBetika(aviatorIframe, ipcMain) {
                             lastPayoutValue
                         );
 
-                        // Fetch the updated latest payout from the iframe
+                        // Fetch the updated latest payout
                         let newPayout = await fetchLatestPayout(iframe);
                         if (newPayout !== null && newPayout !== lastPayoutValue) {
                             results.push(newPayout);
-                            console.log("Updated payouts in iframe:", results); // Print the full results array to the console
-                            // Pass the results array to the API call function (no emit)
-                            makeApiCall(results);
+                            console.log("Updated payouts in iframe:", results);
+
+                            // Call OpenAI API to predict the next payout and log the response
+                            try {
+                                const apiResponse = await openAiPredictNextPayout(results);
+                                console.log("API Response:", apiResponse); // Log the API response
+                            } catch (error) {
+                                console.error("Failed to get API response:", error.message);
+                            }
+
                             lastPayoutValue = newPayout; // Update the last seen value
                         }
 
@@ -189,22 +199,19 @@ async function aviatorBotBetika(aviatorIframe, ipcMain) {
                 }
             }
 
-            // Click on the results trigger to open the payout block within the iframe (if needed)
+            // Click on the results trigger to open the payout block (if needed)
             let results_trigger = await aviatorIframe.waitForSelector('.trigger', { visible: true });
             await results_trigger.click();
             console.log("Results trigger clicked in iframe...");
 
-            // Start monitoring payouts indefinitely in the iframe
+            // Start monitoring payouts indefinitely
             monitorPayouts(aviatorIframe).catch(error => console.error("Payout monitoring failed in iframe:", error));
 
-            // Keep the function running indefinitely (no timeout, as monitoring is continuous)
-            // You can add a stopping condition (e.g., via external signal or manual break)
-            await new Promise(() => {}); // Keep the function running indefinitely
+            // Keep the function running indefinitely
+            await new Promise(() => {});
 
-            // Cleanup (this will only be reached if the loop breaks, e.g., on error)
-            clearInterval(balanceInterval);
-
-            return results; // This return is technically unreachable due to the infinite promise, but included for completeness
+            // Cleanup (unreachable due to infinite promise)
+            return results;
         } else {
             throw new Error("The 'amount' class was not found in the iframe HTML. Please check if the element's class or structure has changed.");
         }
@@ -215,17 +222,3 @@ async function aviatorBotBetika(aviatorIframe, ipcMain) {
 }
 
 module.exports = aviatorBotBetika;
-
-// Mock function for API call (in the same file)
-function makeApiCall(payouts) {
-    console.log("Making API call with payouts:", payouts);
-    // Mock API call logic (simulate sending data to an endpoint)
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            console.log("API call completed successfully for payouts:", payouts);
-            resolve({ status: "success", data: payouts });
-        }, 1000); // Simulate network delay
-    }).catch(error => {
-        console.error("Mock API call failed:", error);
-    });
-}
