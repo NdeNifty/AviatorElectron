@@ -1,5 +1,5 @@
 // aviatorBot.js
-const { openAiPredictNextPayout } = require("../models/openAi");
+const { grokAiPredictNextPayout } = require("../models/grokAi"); // Import from grokAi.js
 
 async function aviatorBot(page, ipcMain) {
     console.log("Aviator Bot started...");
@@ -115,7 +115,7 @@ async function aviatorBot(page, ipcMain) {
         }
     }
 
-    // Function to continuously monitor for updates to the latest payout, print results, and call OpenAI API
+    // Function to continuously monitor for updates to the latest payout, print results, and call Grok AI API
     async function monitorPayouts() {
         let lastPayoutValue = null; // Track the last seen payout value
         while (true) { // Run indefinitely until stopped
@@ -142,9 +142,9 @@ async function aviatorBot(page, ipcMain) {
                     results.push(newPayout);
                     console.log("Updated payouts:", results); // Print the full results array to the console
 
-                    // Call OpenAI API to predict the next payout and log the response
+                    // Call Grok AI API to predict the next payout and log the response
                     try {
-                        const apiResponse = await openAiPredictNextPayout(results);
+                        const apiResponse = await grokAiPredictNextPayout(results);
                         console.log("API Response:", apiResponse); // Log the API response
                     } catch (error) {
                         console.error("Failed to get API response:", error.message);
