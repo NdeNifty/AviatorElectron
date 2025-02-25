@@ -1,51 +1,209 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f4f4;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-right: #7a8ea4 px solid;
+    transition: background-color 0.3s ease, all 0.3s ease; /* Added all for broader transitions */
+}
 
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f4f4;
-            width: 100%;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border-right: #7a8ea4 px solid;
-        }
+body.dark-mode {
+    background: #1a1a2e; /* Dark background inspired by GoPidge */
+}
 
-        .sidebar {
-            width: 280px;
-            height: 100vh;
-            background: #ffffff;
-            padding: 20px;
-            overflow-y: auto; /* Enable vertical scrolling when needed */
-            overflow-x: hidden; /* Remove horizontal scroll */
-            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-        }
+.sidebar {
+    width: 280px;
+    height: 100vh;
+    background: #f9f9f9; /* Light gray background for a sleek, professional light mode */
+    padding: 20px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    position: relative; /* Ensure relative positioning for absolute child */
+    transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions for all properties */
+}
 
-        h2 {
-            margin-bottom: 15px;
-        }
+.sidebar.dark-mode {
+    background: linear-gradient(to bottom, #130630, #2A0C6B); /* Retain dark mode gradient */
+    color: #ffffff; /* White text for contrast */
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.3);
+}
 
-        select, button {
-            margin: 10px 0;
-            padding: 10px;
-            width: 100%;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 14px;
-        }
+h2 {
+    margin-bottom: 15px;
+    color: #1a1a1a; /* Dark gray for readability in light mode */
+    transition: color 0.3s ease;
+    position: relative; /* Ensure h2 is positioned for toggle placement */
+}
 
-        button {
-            background-color: #007bff;
-            color: white;
-            cursor: pointer;
-        }
+.sidebar.dark-mode h2 {
+    color: #ffffff;
+}
 
-        button:hover {
-            background-color: #0056b3;
-        }
-  
+select, button {
+    margin: 10px 0;
+    padding: 10px;
+    width: 100%;
+    border: 1px solid #e0e0e0; /* Light gray border for a clean look */
+    border-radius: 5px;
+    font-size: 14px;
+    background: #ffffff; /* White background for inputs in light mode */
+    color: #333333; /* Dark gray text for readability */
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.sidebar.dark-mode select,
+.sidebar.dark-mode button {
+    background: #2b3a55; /* Lighter dark background for inputs in dark mode */
+    border-color: #4a5c7a; /* Lighter border for contrast in dark mode */
+    color: #ffffff;
+}
+
+button {
+    background-color: #007bff; /* Blue button for consistency with prediction box border in light mode */
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+}
+
+button:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Slightly larger shadow on hover */
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.sidebar.dark-mode button {
+    background-color: #6a5acd; /* Purple button in dark mode, inspired by GoPidge */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar.dark-mode button:hover {
+    background-color: #483d8b; /* Darker purple on hover */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+#stop-button {
+    background-color: #C21421; /* Sharper, vibrant red for the stop button */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+}
+
+#stop-button:hover {
+    background-color: #ff0000; /* Darker, sharper red on hover */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Slightly larger shadow on hover */
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.sidebar.dark-mode #stop-button {
+    background-color: #C21421; /* Brighter red in dark mode for contrast */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar.dark-mode #stop-button:hover {
+    background-color: #ff1a1a; /* Darker red in dark mode */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.balance-container {
+    margin-top: 25px; /* Slightly increased for a more spacious feel */
+    color: #1a1a1a; /* Dark gray for readability in light mode */
+    transition: color 0.3s ease, all 0.3s ease;
+}
+
+.sidebar.dark-mode .balance-container {
+    color: #ffffff;
+}
+
+.balance-container span#balance-value {
+    margin-left: 5px;
+}
+
+.prediction-box {
+    margin-top: 25px; /* Slightly increased for a more spacious feel */
+    width: 160px; /* Updated to match your preference */
+    height: 160px; /* Updated to match your preference */
+    background-color: #e0e0e0; /* Light gray background for a clean look */
+    border: 2px solid #007bff; /* Blue border to match the Load & Scrape button in light mode */
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 18px;
+    font-weight: bold;
+    color: #1a1a1a; /* Dark gray text for readability */
+    margin-left: auto;
+    margin-right: auto;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.sidebar.dark-mode .prediction-box {
+    background-color: #2b3a55; /* Darker background in dark mode */
+    border-color: #6a5acd; /* Purple border in dark mode, inspired by GoPidge */
+    color: #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Theme toggle styles (top right, plain slider) */
+.theme-toggle-container {
+    position: absolute;
+    top: 20px; /* Align with top of sidebar */
+    right: 20px; /* Position to the right of "Menu" */
+    display: flex;
+    justify-content: flex-end; /* Align to the right */
+}
+
+.theme-toggle-label {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+#theme-toggle {
+    display: none;
+}
+
+.theme-toggle-slider {
+    width: 50px;
+    height: 25px;
+    background-color: #ccc;
+    border-radius: 25px;
+    position: relative;
+    transition: background-color 0.3s ease, all 0.3s ease;
+}
+
+.theme-toggle-slider::before {
+    content: "";
+    position: absolute;
+    width: 21px;
+    height: 21px;
+    left: 2px;
+    top: 2px;
+    background-color: white;
+    border-radius: 50%;
+    transition: transform 0.3s ease;
+}
+
+#theme-toggle:checked + .theme-toggle-slider {
+    background-color: #6a5acd; /* Purple in dark mode, inspired by GoPidge */
+}
+
+#theme-toggle:checked + .theme-toggle-slider::before {
+    transform: translateX(25px);
+}
+
+.sidebar.dark-mode .theme-toggle-slider {
+    background-color: #4a5c7a; /* Darker purple in dark mode */
+}
+
+.sidebar.dark-mode #theme-toggle:checked + .theme-toggle-slider {
+    background-color: #6a5acd; /* Same purple for consistency */
+}

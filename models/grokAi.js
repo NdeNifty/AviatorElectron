@@ -1,5 +1,6 @@
 // grokAi.js (using axios with .env)
-require("dotenv").config({ path: "../.env" }); // Load .env from parent directory
+require("dotenv").config(); // Load .env from parent directory
+console.log("XAI_API_KEY:", process.env.XAI_API_KEY);
 
 const axios = require("axios");
 

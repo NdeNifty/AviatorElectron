@@ -3,32 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enter Product Key</title>
+    <title>Aviator Bot</title>
     <style>
         body {
             font-family: Arial, sans-serif;
+            background: #f9f9f9; /* Light gray background for a sleek, professional look */
             text-align: center;
-            padding: 20px;
+            padding: 0; /* Remove padding to ensure full centering */
+            height: 100vh; /* Full height for consistency */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0; /* Remove default margins */
+            transition: background-color 0.3s ease, all 0.3s ease; /* Smooth transitions */
         }
+
         .container {
             max-width: 300px;
+            width: 100%; /* Ensure container uses full available width up to max-width */
             margin: auto;
+            padding: 20px;
+            background: #ffffff; /* White background for the container */
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+            border-radius: 5px; /* Rounded corners for a modern look */
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
         }
+
+        h2 {
+            color: #1a1a1a; /* Dark gray for readability */
+            margin-bottom: 20px; /* Increased spacing for a spacious feel */
+            transition: color 0.3s ease;
+        }
+
         input {
-            width: 100%;
-            padding: 8px;
+            width: 90%; /* Full width within container for consistency with button */
+            padding: 12px; /* Slightly increased padding for better touch targets */
             margin: 10px 0;
+            border: 1px solid #e0e0e0; /* Light gray border for a clean look */
+            border-radius: 5px; /* Rounded corners for consistency */
+            font-size: 14px;
+            color: #333333; /* Dark gray text for readability */
+            background: #ffffff; /* White background for inputs */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Subtle shadow for depth */
+            transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
         }
+
+        input:focus {
+            border-color: #0056b3; /* Purple accent for focus state, tying to GoPidge theme */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Slightly larger shadow on focus */
+            outline: none; /* Remove default outline for a cleaner look */
+        }
+
         button {
-            width: 100%;
-            padding: 10px;
-            background-color: #007BFF;
+            width: 100%; /* Full width within container to match input */
+            padding: 12px; /* Increased padding for better touch targets */
+            background-color: #007bff; /* Blue button to match sidebar, consistent with prediction box border */
             color: white;
             border: none;
+            margin-top: 10px;
+            border-radius: 5px; /* Rounded corners for consistency */
             cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
         }
+
         button:hover {
-            background-color: #0056b3;
+            background-color: #0056b3; /* Darker blue on hover */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Slightly larger shadow on hover */
         }
     </style>
 </head>

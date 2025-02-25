@@ -1,4 +1,3 @@
-// aviatorBot.js
 const { grokAiPredictNextPayout } = require("../models/grokAi"); // Import from grokAi.js
 
 async function aviatorBot(page, ipcMain) {
@@ -145,9 +144,24 @@ async function aviatorBot(page, ipcMain) {
                     // Call Grok AI API to predict the next payout and log the response
                     try {
                         const apiResponse = await grokAiPredictNextPayout(results);
-                        console.log("API Response:", apiResponse); // Log the API response
+                        console.log("API Response:", apiResponse); // Log the raw API response
+
+                        // Parse the API response to extract a number (or use as string)
+                        let predictedNumber = apiResponse.trim();
+                        let numericPrediction = parseFloat(predictedNumber);
+                        if (!isNaN(numericPrediction)) {
+                            predictedNumber = numericPrediction.toString(); // Convert to string for consistency
+                        }
+
+                        // Send the prediction to the sidebar via IPC
+                        if (predictedNumber) {
+                            ipcMain.emit('prediction-update', null, predictedNumber);
+                        } else {
+                            ipcMain.emit('prediction-update', null, "No prediction available");
+                        }
                     } catch (error) {
                         console.error("Failed to get API response:", error.message);
+                        ipcMain.emit('prediction-update', null, "Prediction error");
                     }
 
                     lastPayoutValue = newPayout; // Update the last seen value

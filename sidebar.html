@@ -5,14 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sidebar</title>
     <link rel="stylesheet" href="./css/sidebar.css" />
+    <!-- Optional: Include Font Awesome for icons (uncomment if you want to use it) -->
+    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha512-Sf3pqEupk0T/Hus8KBI8rKOuSYFWrIyo0zBalFjrS401sXeku/+6B7MuUpO5yWJ4I3HcmqbI7FQNRTv5Y6p06T/F" crossorigin="anonymous" /> -->
     <script type="module">
       import mappings from "./mappings.js";
       import bookieUrls from "./bookieUrls.js";
-      import scraperMappings from "./scraperMappings.js"; // ✅ Import scraper mappings
+      import scraperMappings from "./scraperMappings.js";
 
       window.onload = function () {
         const countrySelect = document.getElementById("country-selector");
         const bookieSelect = document.getElementById("bookie-selector");
+        const loadButton = document.getElementById("load-button");
+        const stopButton = document.getElementById("stop-button");
+        const elementsToHide = document.querySelectorAll(
+          ".sidebar > *:not(.balance-container):not(#prediction-box)"
+        );
+        const balanceContainer = document.querySelector(".balance-container");
+        const predictionBox = document.getElementById("prediction-box");
+        const themeToggle = document.getElementById("theme-toggle");
+
+        console.log("Theme toggle element:", themeToggle); // Debugging: Check if the element exists
 
         // Populate country dropdown
         for (const country in mappings) {
@@ -22,7 +34,6 @@
           countrySelect.appendChild(option);
         }
 
-        // Update bookie dropdown when country changes
         countrySelect.addEventListener("change", () => {
           const selectedCountry = countrySelect.value;
           bookieSelect.innerHTML = '<option value="">Select a Bookie</option>';
@@ -37,35 +48,76 @@
           }
         });
 
-        document
-          .getElementById("load-button")
-          .addEventListener("click", async () => {
-            const selectedBookie =
-              document.getElementById("bookie-selector").value;
-            if (!selectedBookie) {
-              alert("Please select a bookie.");
-              return;
-            }
+        loadButton.addEventListener("click", async () => {
+          const selectedBookie = bookieSelect.value;
+          if (!selectedBookie) {
+            alert("Please select a bookie.");
+            return;
+          }
 
-            const url = bookieUrls[selectedBookie] || "";
-            if (!url) {
-              alert("No URL found for the selected bookie.");
-              return;
-            }
+          const url = bookieUrls[selectedBookie] || "";
+          if (!url) {
+            alert("No URL found for the selected bookie.");
+            return;
+          }
 
-            console.log(`Loading site in BrowserView: ${url}`);
-            await window.electron.updateURL(url); // ✅ Load in BrowserView
+          elementsToHide.forEach(element => element.style.display = "none");
+          balanceContainer.style.display = "block";
+          predictionBox.style.display = "block"; // Ensure prediction box stays visible
+          stopButton.style.display = "block";
+          loadButton.style.display = "none";
 
-            // ✅ Automatically start Puppeteer after loading
-            const scraperName = scraperMappings[selectedBookie];
-            if (!scraperName) {
-              alert("No scraper found for the selected bookie.");
-              return;
-            }
+          console.log(`Loading site in BrowserView: ${url}`);
+          await window.electron.updateURL(url);
 
-            console.log(`Starting scraper: ${scraperName}`);
-            await window.electron.scrapePage(url, scraperName);
+          const scraperName = scraperMappings[selectedBookie];
+          if (!scraperName) {
+            alert("No scraper found for the selected bookie.");
+            resetUI();
+            return;
+          }
+
+          console.log(`Starting scraper: ${scraperName}`);
+          await window.electron.scrapePage(url, scraperName);
+        });
+
+        stopButton.addEventListener("click", async () => {
+          await window.electron.stopBrowserView();
+          resetUI();
+        });
+
+        function resetUI() {
+          elementsToHide.forEach(element => element.style.display = "");
+          stopButton.style.display = "none";
+          balanceContainer.style.display = "block";
+          predictionBox.style.display = "block"; // Ensure prediction box is visible on reset
+          loadButton.style.display = "block";
+        }
+
+        // Listen for prediction updates from the browser view
+        window.electron.onPredictionUpdate((prediction) => {
+          predictionBox.textContent = prediction || "No prediction yet";
+        });
+
+        // Handle theme toggle
+        if (themeToggle) { // Safety check
+          themeToggle.addEventListener("change", () => {
+            console.log("Theme toggle changed, checked:", themeToggle.checked);
+            document.body.classList.toggle("dark-mode");
+            document.querySelector(".sidebar").classList.toggle("dark-mode");
+            // Save preference to localStorage
+            localStorage.setItem("theme", themeToggle.checked ? "dark" : "light");
           });
+
+          // Check for saved theme preference in localStorage
+          if (localStorage.getItem("theme") === "dark") {
+            document.body.classList.add("dark-mode");
+            document.querySelector(".sidebar").classList.add("dark-mode");
+            themeToggle.checked = true;
+          }
+        } else {
+          console.error("Theme toggle element not found!");
+        }
       };
     </script>
   </head>
@@ -77,28 +129,29 @@
     </script>
     <div class="sidebar">
       <h2>Menu</h2>
-
+      <div class="theme-toggle-container">
+        <label class="theme-toggle-label">
+          <input type="checkbox" id="theme-toggle" />
+          <span class="theme-toggle-slider"></span>
+        </label>
+      </div>
       <label for="country-selector">Select Country:</label>
       <select id="country-selector">
         <option value="">Select a Country</option>
       </select>
-
       <label for="bookie-selector">Select Bookie:</label>
       <select id="bookie-selector">
         <option value="">Select a Bookie</option>
       </select>
-
       <button id="load-button">Load & Scrape</button>
+      <button id="stop-button" style="display: none;">Stop</button>
       <div class="balance-container">
         <span>Balance</span>
         <span id="balance-value"></span>
       </div>
+      <div id="prediction-box" class="prediction-box">
+        No prediction yet
+      </div>
     </div>
   </body>
 </html>
-
-
-
-
-
-
