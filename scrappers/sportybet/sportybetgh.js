@@ -61,7 +61,7 @@ async function startScraper() {
                         console.log("Clicked 'Aviator' tab.");
 
                         console.log("Waiting for Aviator game to load...");
-                        await new Promise(resolve => setTimeout(resolve, 15000));
+                        await new Promise(resolve => setTimeout(resolve, 8000));
 
                         console.log("Looking for the 'games-lobby' iframe...");
                         const gamesLobbyIframe = await page.waitForSelector('#games-lobby', { timeout: 10000 });

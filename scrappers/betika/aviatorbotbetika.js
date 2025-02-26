@@ -1,4 +1,4 @@
-const { grokAiPredictNextPayout } = require("../../models/grokAi"); // Adjusted import path
+const { lstmPredict } = require("../../models/lstmPredict"); // Adjusted import path to use LSTM model
 
 async function aviatorBotBetika(aviatorIframe, ipcMain) {
     console.log("Aviator Bot started...");
@@ -123,7 +123,6 @@ async function aviatorBotBetika(aviatorIframe, ipcMain) {
                         return null;
                     }
 
-                    // Get the first payout (latest multiplier)
                     let latestPayout = payoutElements[0];
                     let multiplierValue = await latestPayout.$('.bubble-multiplier.font-weight-bold');
                     if (multiplierValue) {
@@ -147,12 +146,11 @@ async function aviatorBotBetika(aviatorIframe, ipcMain) {
                 }
             }
 
-            // Function to continuously monitor payouts and call Grok AI prediction
+            // Function to continuously monitor payouts and call LSTM prediction
             async function monitorPayouts(iframe) {
-                let lastPayoutValue = null; // Track the last seen payout value
-                while (true) { // Run indefinitely
+                let lastPayoutValue = null;
+                while (true) {
                     try {
-                        // Wait for changes in the first payout's value
                         await iframe.waitForFunction(
                             (prevValue) => {
                                 const payoutsBlock = document.querySelector('.payouts-block');
@@ -164,56 +162,46 @@ async function aviatorBotBetika(aviatorIframe, ipcMain) {
                                 const currentValue = multiplier.textContent.trim();
                                 return currentValue !== prevValue && currentValue !== "";
                             },
-                            { timeout: 30000 }, // 30 seconds timeout
+                            { timeout: 30000 },
                             lastPayoutValue
                         );
 
-                        // Fetch the updated latest payout
                         let newPayout = await fetchLatestPayout(iframe);
                         if (newPayout !== null && newPayout !== lastPayoutValue) {
                             results.push(newPayout);
                             console.log("Updated payouts in iframe:", results);
 
-                            // Call Grok AI API to predict the next payout and log the response
+                            // Call LSTM model to predict the next payout
                             try {
-                                const apiResponse = await grokAiPredictNextPayout(results);
-                                console.log("API Response:", apiResponse); // Log the raw API response
+                                const predictedNumber = await lstmPredict(results);
+                                console.log("LSTM Prediction:", predictedNumber);
 
-                                // Parse the API response to extract a number (or use as string)
-                                let predictedNumber = apiResponse.trim();
-                                let numericPrediction = parseFloat(predictedNumber);
-                                if (!isNaN(numericPrediction)) {
-                                    predictedNumber = numericPrediction.toString(); // Convert to string for consistency
-                                }
+                                // Convert to string for IPC consistency (if needed)
+                                const predictedString = predictedNumber.toString();
 
                                 // Send the prediction to the sidebar via IPC
-                                if (predictedNumber) {
-                                    ipcMain.emit('prediction-update', null, predictedNumber);
-                                } else {
-                                    ipcMain.emit('prediction-update', null, "No prediction available");
-                                }
+                                ipcMain.emit('prediction-update', null, predictedString);
                             } catch (error) {
-                                console.error("Failed to get API response:", error.message);
+                                console.error("Failed to get LSTM prediction:", error.message);
                                 ipcMain.emit('prediction-update', null, "Prediction error");
                             }
 
-                            lastPayoutValue = newPayout; // Update the last seen value
+                            lastPayoutValue = newPayout;
                         }
 
-                        // Small delay to avoid excessive CPU usage
                         await new Promise(resolve => setTimeout(resolve, 1000));
                     } catch (error) {
                         if (error.name === 'TimeoutError') {
                             console.log("No new payout detected within 30 seconds in iframe. Retrying...");
                         } else {
                             console.error("Error monitoring payouts in iframe:", error);
-                            break; // Exit on critical errors
+                            break;
                         }
                     }
                 }
             }
 
-            // Click on the results trigger to open the payout block (if needed)
+            // Click on the results trigger to open the payout block
             let results_trigger = await aviatorIframe.waitForSelector('.trigger', { visible: true });
             await results_trigger.click();
             console.log("Results trigger clicked in iframe...");

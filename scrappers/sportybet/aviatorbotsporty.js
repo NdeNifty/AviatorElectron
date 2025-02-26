@@ -1,4 +1,4 @@
-const { grokAiPredictNextPayout } = require("../../models/grokAi"); // Adjusted import path
+const { lstmPredict } = require("../../models/lstmPredict"); // Adjusted import path
 
 async function aviatorBotSporty(aviatorIframe, ipcMain) {
     console.log("Aviator Bot started...");
@@ -46,25 +46,22 @@ async function aviatorBotSporty(aviatorIframe, ipcMain) {
                 throw new Error("Aviator game not loaded correctly. '.amount' not found in iframe.");
             }
 
-            // Get the initial balance from the iframe (same context as payouts)
+            // Get the initial balance from the iframe
             let lastBalance = await aviatorIframe.evaluate(() => {
                 const amount = document.querySelector('span.amount');
                 return amount ? amount.textContent.trim() : null;
             });
             console.log("Initial Balance in iframe:", lastBalance);
 
-            // Check if balance is valid
             if (lastBalance === null || lastBalance === '') {
                 throw new Error("Invalid balance detected in iframe.");
             }
 
-            // Emit the initial balance to the renderer
             ipcMain.emit('balance-updated', null, lastBalance);
 
-            // Initialize results array with all existing payouts from the iframe (same context)
+            // Initialize results array with existing payouts
             let results = await fetchAllExistingPayouts(aviatorIframe);
 
-            // Function to fetch all existing payouts and initialize the results array within the iframe
             async function fetchAllExistingPayouts(iframe) {
                 let initialResults = [];
                 try {
@@ -90,7 +87,7 @@ async function aviatorBotSporty(aviatorIframe, ipcMain) {
                             if (!isNaN(numericValue)) {
                                 initialResults.push(numericValue);
                             } else {
-                                initialResults.push(value); // Keep as string if not numeric
+                                initialResults.push(value);
                             }
                         } else {
                             console.log("No .bubble-multiplier.font-weight-bold found in this payout in iframe.");
@@ -106,7 +103,6 @@ async function aviatorBotSporty(aviatorIframe, ipcMain) {
                 }
             }
 
-            // Function to fetch the latest payout (first .payout element) within the iframe
             async function fetchLatestPayout(iframe) {
                 try {
                     console.log("Checking for latest payout in iframe...");
@@ -122,7 +118,6 @@ async function aviatorBotSporty(aviatorIframe, ipcMain) {
                         return null;
                     }
 
-                    // Get the first payout (latest multiplier, assuming it's at the start)
                     let latestPayout = payoutElements[0];
                     let multiplierValue = await latestPayout.$('.bubble-multiplier.font-weight-bold');
                     if (multiplierValue) {
@@ -132,7 +127,7 @@ async function aviatorBotSporty(aviatorIframe, ipcMain) {
                         if (!isNaN(numericValue)) {
                             return numericValue;
                         } else {
-                            return value; // Keep as string if not numeric
+                            return value;
                         }
                     } else {
                         console.log("No .bubble-multiplier.font-weight-bold found in latest payout in iframe.");
@@ -146,12 +141,10 @@ async function aviatorBotSporty(aviatorIframe, ipcMain) {
                 }
             }
 
-            // Function to continuously monitor for updates to the latest payout, print results, and call Grok AI API
             async function monitorPayouts(iframe) {
-                let lastPayoutValue = null; // Track the last seen payout value
-                while (true) { // Run indefinitely until stopped
+                let lastPayoutValue = null;
+                while (true) {
                     try {
-                        // Wait for changes in the first payout's value within the iframe
                         await iframe.waitForFunction(
                             (prevValue) => {
                                 const payoutsBlock = document.querySelector('.payouts-block');
@@ -163,70 +156,55 @@ async function aviatorBotSporty(aviatorIframe, ipcMain) {
                                 const currentValue = multiplier.textContent.trim();
                                 return currentValue !== prevValue && currentValue !== "";
                             },
-                            { timeout: 30000 }, // 30 seconds timeout
+                            { timeout: 30000 },
                             lastPayoutValue
                         );
 
-                        // Fetch the updated latest payout from the iframe
                         let newPayout = await fetchLatestPayout(iframe);
                         if (newPayout !== null && newPayout !== lastPayoutValue) {
                             results.push(newPayout);
-                            console.log("Updated payouts in iframe:", results); // Print the full results array to the console
+                            console.log("Updated payouts in iframe:", results);
 
-                            // Call Grok AI API to predict the next payout and log the response
+                            // Call LSTM predict function
                             try {
-                                const apiResponse = await grokAiPredictNextPayout(results);
-                                console.log("API Response:", apiResponse); // Log the raw API response
+                                const predictedNumber = await lstmPredict(results);
+                                console.log("LSTM Prediction:", predictedNumber);
 
-                                // Parse the API response to extract a number (or use as string)
-                                let predictedNumber = apiResponse.trim();
-                                let numericPrediction = parseFloat(predictedNumber);
-                                if (!isNaN(numericPrediction)) {
-                                    predictedNumber = numericPrediction.toString(); // Convert to string for consistency
-                                }
+                                // Convert to string for IPC consistency (if needed)
+                                const predictedString = predictedNumber.toString();
 
                                 // Send the prediction to the sidebar via IPC
-                                if (predictedNumber) {
-                                    ipcMain.emit('prediction-update', null, predictedNumber);
-                                } else {
-                                    ipcMain.emit('prediction-update', null, "No prediction available");
-                                }
+                                ipcMain.emit('prediction-update', null, predictedString);
+
                             } catch (error) {
-                                console.error("Failed to get API response:", error.message);
+                                console.error("Failed to get LSTM response:", error.message);
                                 ipcMain.emit('prediction-update', null, "Prediction error");
                             }
 
-                            lastPayoutValue = newPayout; // Update the last seen value
+                            lastPayoutValue = newPayout;
                         }
 
-                        // Small delay to avoid excessive CPU usage
                         await new Promise(resolve => setTimeout(resolve, 1000));
                     } catch (error) {
                         if (error.name === 'TimeoutError') {
                             console.log("No new payout detected within 30 seconds in iframe. Retrying...");
                         } else {
                             console.error("Error monitoring payouts in iframe:", error);
-                            break; // Exit on critical errors
+                            break;
                         }
                     }
                 }
             }
 
-            // Click on the results trigger to open the payout block within the iframe (if needed)
             let results_trigger = await aviatorIframe.waitForSelector('.trigger', { visible: true });
             await results_trigger.click();
             console.log("Results trigger clicked in iframe...");
 
-            // Start monitoring payouts indefinitely in the iframe
             monitorPayouts(aviatorIframe).catch(error => console.error("Payout monitoring failed in iframe:", error));
 
-            // Keep the function running indefinitely (no timeout, as monitoring is continuous)
-            await new Promise(() => {}); // Keep the function running indefinitely
+            await new Promise(() => {});
 
-            // Cleanup (this will only be reached if the loop breaks, e.g., on error)
-            clearInterval(balanceInterval);
-
-            return results; // This return is technically unreachable due to the infinite promise, but included for completeness
+            return results;
         } else {
             throw new Error("The 'amount' class was not found in the iframe HTML. Please check if the element's class or structure has changed.");
         }

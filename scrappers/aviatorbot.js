@@ -1,4 +1,4 @@
-const { grokAiPredictNextPayout } = require("../models/grokAi"); // Import from grokAi.js
+const { lstmPredict } = require("../models/lstmPredict"); // Updated import to use LSTM model
 
 async function aviatorBot(page, ipcMain) {
     console.log("Aviator Bot started...");
@@ -55,7 +55,7 @@ async function aviatorBot(page, ipcMain) {
                     let value = await page.evaluate(el => el.textContent.trim(), multiplierValue);
                     console.log("Found existing multiplier value:", value);
                     let numericValue = parseFloat(value);
-                    if (!isNaN(numericValue)) {
+                    if (!isNaN(numericPrediction)) {
                         initialResults.push(numericValue);
                     } else {
                         initialResults.push(value); // Keep as string if not numeric
@@ -90,7 +90,6 @@ async function aviatorBot(page, ipcMain) {
                 return null;
             }
 
-            // Get the first payout (latest multiplier, assuming it's at the start)
             let latestPayout = payoutElements[0];
             let multiplierValue = await latestPayout.$('.bubble-multiplier.font-weight-bold');
             if (multiplierValue) {
@@ -114,7 +113,7 @@ async function aviatorBot(page, ipcMain) {
         }
     }
 
-    // Function to continuously monitor for updates to the latest payout, print results, and call Grok AI API
+    // Function to continuously monitor for updates to the latest payout, print results, and call LSTM model
     async function monitorPayouts() {
         let lastPayoutValue = null; // Track the last seen payout value
         while (true) { // Run indefinitely until stopped
@@ -141,26 +140,18 @@ async function aviatorBot(page, ipcMain) {
                     results.push(newPayout);
                     console.log("Updated payouts:", results); // Print the full results array to the console
 
-                    // Call Grok AI API to predict the next payout and log the response
+                    // Call LSTM model to predict the next payout
                     try {
-                        const apiResponse = await grokAiPredictNextPayout(results);
-                        console.log("API Response:", apiResponse); // Log the raw API response
+                        const predictedNumber = await lstmPredict(results);
+                        console.log("LSTM Prediction:", predictedNumber);
 
-                        // Parse the API response to extract a number (or use as string)
-                        let predictedNumber = apiResponse.trim();
-                        let numericPrediction = parseFloat(predictedNumber);
-                        if (!isNaN(numericPrediction)) {
-                            predictedNumber = numericPrediction.toString(); // Convert to string for consistency
-                        }
+                        // Convert to string for IPC consistency (if needed)
+                        const predictedString = predictedNumber.toString();
 
                         // Send the prediction to the sidebar via IPC
-                        if (predictedNumber) {
-                            ipcMain.emit('prediction-update', null, predictedNumber);
-                        } else {
-                            ipcMain.emit('prediction-update', null, "No prediction available");
-                        }
+                        ipcMain.emit('prediction-update', null, predictedString);
                     } catch (error) {
-                        console.error("Failed to get API response:", error.message);
+                        console.error("Failed to get LSTM prediction:", error.message);
                         ipcMain.emit('prediction-update', null, "Prediction error");
                     }
 
@@ -188,13 +179,13 @@ async function aviatorBot(page, ipcMain) {
     // Start monitoring payouts indefinitely
     monitorPayouts().catch(error => console.error("Payout monitoring failed:", error));
 
-    // Keep the function running indefinitely (no timeout, as monitoring is continuous)
+    // Keep the function running indefinitely
     await new Promise(() => {}); // Keep the function running indefinitely
 
-    // Cleanup (this will only be reached if the loop breaks, e.g., on error)
+    // Cleanup (unreachable unless loop breaks)
     clearInterval(balanceInterval);
 
-    return results; // This return is technically unreachable due to the infinite promise, but included for completeness
+    return results; // Unreachable but included for completeness
 }
 
 module.exports = aviatorBot;
