@@ -54,8 +54,8 @@ async function aviatorBot(page, ipcMain) {
                 if (multiplierValue) {
                     let value = await page.evaluate(el => el.textContent.trim(), multiplierValue);
                     console.log("Found existing multiplier value:", value);
-                    let numericValue = parseFloat(value);
-                    if (!isNaN(numericPrediction)) {
+                    let numericValue = parseFloat(value); // Fixed typo: numericValue instead of numericPrediction
+                    if (!isNaN(numericValue)) {
                         initialResults.push(numericValue);
                     } else {
                         initialResults.push(value); // Keep as string if not numeric
@@ -140,12 +140,12 @@ async function aviatorBot(page, ipcMain) {
                     results.push(newPayout);
                     console.log("Updated payouts:", results); // Print the full results array to the console
 
-                    // Call LSTM model to predict the next payout
+                    // Call LSTM model to predict the next payout using the entire results array
                     try {
-                        const predictedNumber = await lstmPredict(results);
+                        const predictedNumber = await lstmPredict(results); // Explicitly pass the full results array
                         console.log("LSTM Prediction:", predictedNumber);
 
-                        // Convert to string for IPC consistency (if needed)
+                        // Convert to string for IPC consistency
                         const predictedString = predictedNumber.toString();
 
                         // Send the prediction to the sidebar via IPC

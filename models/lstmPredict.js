@@ -9,7 +9,7 @@ async function lstmPredict(results) {
     const payload = {
       sequence: results, // Array of numbers, e.g., [23.0, 4.2, 1.0, 9.8, 2.4]
     };
-
+      console.log("Results sent to LSTM:", results);
     // Send POST request to the Render LSTM endpoint
     const response = await axios.post(renderUrl, payload, {
       headers: {
