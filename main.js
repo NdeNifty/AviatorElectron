@@ -1,19 +1,23 @@
 const { app, BrowserWindow, BrowserView, ipcMain, dialog } = require('electron');
+const { updateElectronApp } = require('update-electron-app');
+ 
 const path = require('path');
 const scrapers = require('./scrappers');
+const axios = require('axios');
+
+// Removed electron-updater and log imports for testing
 
 let mainWindow;
 let sidebarView;
 let browserView;
-
+updateElectronApp();
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 1200,  // Initial width (will be overridden by maximize)
-    height: 800,  // Initial height (will be overridden by maximize)
+    width: 1200,
+    height: 800,
     show: false,
     webPreferences: {
       contextIsolation: true,
-      enableRemoteModule: false,
       nodeIntegration: true,
       preload: path.join(__dirname, 'preload.js'),
     },
@@ -22,6 +26,7 @@ function createWindow() {
   askForProductKey();
 }
 
+// Handle product key validation
 function askForProductKey() {
   let inputWindow = new BrowserWindow({
     width: 400,
@@ -30,26 +35,44 @@ function askForProductKey() {
     parent: mainWindow,
     webPreferences: {
       contextIsolation: true,
-      nodeIntegration: false,
       preload: path.join(__dirname, 'preload.js'),
     },
   });
 
   inputWindow.loadFile('product-key.html');
 
-  ipcMain.once('submit-product-key', (event, key) => {
-    if (key === '1') {
-      inputWindow.close();
-      mainWindow.show();
-      loadMainApp();
-      mainWindow.maximize(); // Maximize the window to fill the screen
-    } else {
-      dialog.showErrorBox('Error', 'Invalid product key. Exiting...');
-      app.quit();
+  ipcMain.once('submit-product-key', async (event, key) => {
+    try {
+      const deviceId = require('machine-id').machineIdSync();
+      const response = await axios.post('http://localhost:5000/api/validate-key', {
+        key: key,
+        device_id: deviceId,
+      });
+
+      if (response.data.valid) {
+        inputWindow.close();
+        mainWindow.show();
+        loadMainApp();
+        mainWindow.maximize();
+      } else {
+        dialog.showErrorBox('Invalid Key', 'Product key is invalid!');
+        app.quit();
+      }
+    } catch (error) {
+      if (key === '1') {
+        inputWindow.close();
+        mainWindow.show();
+        loadMainApp();
+        mainWindow.maximize();
+      } else {
+        dialog.showErrorBox('Server Error', 'Cannot validate product key.');
+        app.quit();
+      }
     }
   });
 }
 
+// Load the main application interface
 function loadMainApp() {
   const { width, height } = mainWindow.getBounds();
 
@@ -98,6 +121,7 @@ function loadMainApp() {
   });
 }
 
+// Handle IPC messages
 ipcMain.on('update-url', (event, url) => {
   if (browserView) {
     console.log("Loading URL in BrowserView:", url);

@@ -97,6 +97,11 @@
         // Listen for prediction updates from the browser view
         window.electron.onPredictionUpdate((prediction) => {
           predictionBox.textContent = prediction || "No prediction yet";
+          predictionBox.classList.remove("glow"); // Remove class first to restart animation
+          void predictionBox.offsetWidth; // Trick to force reflow (restart animation)
+          if (prediction && prediction !== "No prediction yet") {
+           predictionBox.classList.add("glow");
+  } // Add class back to trigger the glow
         });
 
         // Handle theme toggle
@@ -123,10 +128,26 @@
   </head>
   <body>
     <script>
+      const { ipcRenderer } = require('electron');
+
+        ipcRenderer.on('update_available', () => {
+          alert('🚀 New Update Available! Downloading...');
+        });
+
+        ipcRenderer.on('update_downloaded', () => {
+          const restart = confirm('✅ Update Downloaded! Restart App Now?');
+          if (restart) {
+            ipcRenderer.send('restart_app');
+          }
+        });
+
+    </script>
+    <script>
       window.electron.onUpdateBalance((balance) => {
         document.getElementById("balance-value").textContent = balance;
       });
     </script>
+
     <div class="sidebar">
       <h2>Menu</h2>
       <div class="theme-toggle-container">

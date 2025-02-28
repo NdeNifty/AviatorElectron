@@ -133,14 +133,15 @@ button:hover {
     background-color: #e0e0e0; /* Light gray background for a clean look */
     border: 2px solid #007bff; /* Blue border to match the Load & Scrape button in light mode */
     border-radius: 5px;
-    display: flex;
+    display: flex !important;
     justify-content: center;
     align-items: center;
-    font-size: 18px;
+    font-size: 25px;
     font-weight: bold;
     color: #1a1a1a; /* Dark gray text for readability */
     margin-left: auto;
     margin-right: auto;
+    text-align: center;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
     transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
 }
@@ -207,3 +208,36 @@ button:hover {
 .sidebar.dark-mode #theme-toggle:checked + .theme-toggle-slider {
     background-color: #6a5acd; /* Same purple for consistency */
 }
+
+.prediction-box.glow {
+    animation: fadeInGlow 2s ease-in-out;
+    font-size: 35px; /* Bigger text */
+    transition: font-size 0.3s ease-in-out; /* Smooth transition */
+  }
+  
+  .sidebar.dark-mode .prediction-box.glow {
+    box-shadow: 0 0 15px rgba(106, 90, 205, 0.7); /* Purple glow in dark mode */
+  }
+  
+
+  @keyframes fadeInGlow {
+    0% {
+      opacity: 0;
+      transform: scale(1); /* Start normal size */
+      box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.1); /* Slightly larger */
+      box-shadow: 0 0 10px rgba(0, 123, 255, 0.7);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1); /* Back to normal size */
+      box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+    }
+  }
+  
+
+  
+ 

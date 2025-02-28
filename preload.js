@@ -12,4 +12,5 @@ contextBridge.exposeInMainWorld('electron', {
   onUpdateBalance: (callback) => ipcRenderer.on('update-balance', (event, balance) => callback(balance)),
   onPredictionUpdate: (callback) => ipcRenderer.on('prediction-update', (event, prediction) => callback(prediction)),
   stopBrowserView: () => ipcRenderer.send('stop-browser-view'),
+  validateKey: (key, deviceId) => ipcRenderer.invoke('validate-key', key, deviceId), // New method
 });
