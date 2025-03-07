@@ -1,26 +1,29 @@
 const axios = require("axios");
 
-// Render LSTM endpoint
-const renderUrl = "https://aviatorbotltsmpredict.onrender.com/predict";
+// Endpoints
+const predictUrl = "https://aviatorbotltsmpredict.onrender.com/predict";
+const trainUrl = "https://aviatorbotltsmpredict.onrender.com/train";
 
-async function lstmPredict(results) {
+async function predictPreRound(predictionData) {
   try {
-    // Prepare the payload with the sequence of game results
     const payload = {
-      sequence: results, // Array of numbers, e.g., [23.0, 4.2, 1.0, 9.8, 2.4]
+      predictionData: predictionData // { Multiplier_Outcome, Last_30_Multipliers, Time_Gaps }
     };
-      console.log("Results sent to LSTM:", results);
-    // Send POST request to the Render LSTM endpoint
-    const response = await axios.post(renderUrl, payload, {
-      headers: {
-        "Content-Type": "application/json",
-      },
+    console.log("Prediction data sent to LSTM:", predictionData);
+
+    const response = await axios.post(predictUrl, payload, {
+      headers: { "Content-Type": "application/json" },
     });
 
-    // Extract the prediction from the response
-    const predictedNumber = Number(response.data.prediction.toFixed(1)); //prediction(response) rounded to one decimal place before returning
-    console.log("LSTM Prediction:", predictedNumber); // Log the prediction
-    return predictedNumber;
+    // Check if the response contains the expected data
+    if (!response.data || typeof response.data.predicted_multiplier === 'undefined') {
+      throw new Error("Invalid response data from server");
+    }
+
+    const predictedMultiplier = Number(response.data.predicted_multiplier);
+    const formattedMultiplier = predictedMultiplier.toFixed(1);
+    console.log("LSTM Prediction:", formattedMultiplier);
+    return Number(formattedMultiplier);
   } catch (error) {
     console.error(
       "Error predicting next number with LSTM:",
@@ -30,4 +33,26 @@ async function lstmPredict(results) {
   }
 }
 
-module.exports = { lstmPredict };
+async function logPostRound(loggingData) {
+  try {
+    const payload = {
+      loggingData: loggingData // { Skipped_or_Played, Your_Bet_Size, Passive_Watching, Session_ID }
+    };
+    console.log("Logging data sent to LSTM:", loggingData);
+
+    const response = await axios.post(trainUrl, payload, {
+      headers: { "Content-Type": "application/json" },
+    });
+
+    console.log("Post-round data logged successfully:", response.data.message);
+    return response.data; // Could return success message or updated model info
+  } catch (error) {
+    console.error(
+      "Error logging post-round data with LSTM:",
+      error.response ? error.response.data : error.message
+    );
+    throw new Error("Failed to log post-round data with LSTM.");
+  }
+}
+
+module.exports = { predictPreRound, logPostRound };

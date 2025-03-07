@@ -3,6 +3,10 @@
   "version": "1.0.1",
   "description": "Aviator Bot Electron App",
   "main": "main.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NdeNifty/AviatorElectron.git"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "electron-forge start",
@@ -35,7 +39,6 @@
     "punycode": "^2.3.1",
     "puppeteer": "^24.1.1",
     "puppeteer-core": "^24.1.1",
-    "selenium-webdriver": "^4.28.1",
-    "update-electron-app": "^3.1.1"
+    "selenium-webdriver": "^4.28.1"
   }
 }
